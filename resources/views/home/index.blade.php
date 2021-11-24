@@ -10,12 +10,31 @@
 
 @section('content')
 	<div id="map" style="width: 100%; height: 100%;"></div>
+	<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+	aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="modalTitle">Modal title</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body" id="modalBody">
+					
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary">Save changes</button>
+				</div>
+			</div>
+		</div>
+	</div>
 @endsection
 
 @section('js')
-	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==" crossorigin=""></script>
+	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" crossorigin=""></script>
 	<script src="js/osmtogeojson.js"></script>
-	<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
 	<script>		
 		var userLat, userLon
 
@@ -27,6 +46,28 @@
 
 		function showDetail(e){
 			console.log(e.layer.feature)
+			var url = "{{ env('API_URL') }}/place/detail/" + e.layer.feature.id.split('/')[1]
+			$.get(url, function(res){
+				if(res.isFalse){
+					alert("Ada")
+				}else{
+					var title;
+					if(e.layer.feature.properties.name){
+						title = e.layer.feature.properties.name
+					}else if(e.layer.feature.properties["name:en"]){
+						title = e.layer.feature.properties["name:en"]
+					}else{
+						if(e.layer.feature.properties.amenity == "cafe"){
+							title = "Cafe"
+						}else{
+							title = "Restoran"
+						}
+					}
+					$("#modalTitle").text(title)
+					$("#modalBody").html('<li>Amenity : ' + e.layer.feature.properties.amenity + '</li>')
+				}
+			});
+			$('#detailModal').modal({show: true})
 		}
 
 		function fromUserLocation(location){

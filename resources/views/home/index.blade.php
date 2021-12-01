@@ -29,9 +29,9 @@
 
 @section('content')
 	<div class="container col-md-12 p-0">
-		<div id="btnNav" class="btn btn-secondary">
+		{{-- <div id="btnNav" class="btn btn-secondary">
 			<i class="fa fa-bars fa-fw"></i>
-		</div>
+		</div> --}}
 		<div id="map" style="width: 100%; height: 100%;"></div>
 		<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
 		aria-hidden="true">
@@ -45,7 +45,7 @@
 					</div>
 					<div class="modal-body">
 						<div id="infoBody"></div>
-						<div id="modalBody"></div>
+						<div id="modalBody" style="padding-top: 20px"></div>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
@@ -73,9 +73,14 @@
 			var url = "/api/place/detail/" + e.layer.feature.id.split('/')[1]
 			$.get(url, function(res){
 				if(res.isFound){
-					$("#infoBody").html('<ul><li>Amenity : <b>'+e.layer.feature.properties.amenity +'</b></li><li>Rating : <b>'+res.rating+'</b></li></ul>')
+					var komentar = ''
+					for (let index = 0; index < res.komentar.length; index++) {
+						komentar += '<li>' + res.komentar[index] + '</li>';
+					}
+					$("#infoBody").html('<ul><li>Amenity : <b>'+e.layer.feature.properties.amenity +'</b></li><li>Rating : <b>'+res.rating+`</b></li></ul>
+					<b>Komentar Terbaru</b>` + komentar)
 				}else{
-					$("#infoBody").html('<ul><li>Amenity : <b>'+e.layer.feature.properties.amenity +'</b></li></ul>')
+					$("#infoBody").html(`<ul><li>Amenity : <b>`+e.layer.feature.properties.amenity +`</b></li></ul>`)
 				}
 			});
 			var title;
@@ -91,7 +96,19 @@
 				}
 			}
 			$("#modalTitle").text(title)
-			$("#modalBody").html('<form action="/place/submit/'+ e.layer.feature.id.split('/')[1] +'" method="POST">{{csrf_field()}}<textarea name="komentar" class="form-control"></textarea><input type="number" min="1" max="5" class="form-control" name="rating"></form>')
+			$("#modalBody").html(`
+				<form action="/place/submit/`+ e.layer.feature.id.split('/')[1] +`" method="POST">
+					{{csrf_field()}}
+					<div class="form-group">
+						<label class="font-weight-bold">Komentar</label>
+						<textarea name="komentar" class="form-control"></textarea>
+					</div>
+					<div class="form-group">
+						<label class="font-weight-bold">Rating (1-5)</label>
+						<input type="number" min="1" max="5" class="form-control" name="rating">
+					</div>
+				</form>
+				`)
 			$('#detailModal').modal({show: true})
 		}
 

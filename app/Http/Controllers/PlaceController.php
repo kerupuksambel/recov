@@ -10,16 +10,24 @@ class PlaceController extends Controller
     public function detail($id_place)
     {
         $reviews = DB::table('reviews')
-        ->select('rating')
-        ->where('id_place', '=', $id_place)
-        ->get();
+        ->select('rating', 'komentar')
+        ->where('id_place', '=', $id_place);
+
         
         if($reviews->count() > 0){
-            $reviews_array = $reviews->toArray();
-            $rating = array_sum(array_column($reviews_array, 'rating')) / count($reviews->toArray());
+            $reviews_array = $reviews->get()->toArray();
+            $rating = array_sum(array_column($reviews_array, 'rating')) / count($reviews->get()->toArray());
+            
+            $comments = $reviews->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->toArray();
+            $comments = array_column($comments, 'komentar');
+            
             return response()->json([
                 'isFound' => TRUE,
-                'rating' => $rating
+                'rating' => $rating,
+                'komentar' => $comments
             ]);
         }
         return response()->json(['isFound' => FALSE]);

@@ -16,3 +16,4 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('place/detail/{id_place}', [PlaceController::class, 'detail']);
+Route::get('place/submit/{id_place}', [PlaceController::class, 'submit']);

@@ -21,7 +21,7 @@
 
 <body id="page-top">
     <!-- Navigation-->
-    <nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top text-white" id="mainNav">
+    {{-- <nav class="navbar navbar-expand-lg bg-secondary text-uppercase text-white" id="mainNav">
         <div class="container">
             <a class="navbar-brand" href="#page-top">{{ env('APP_NAME') }}</a>
             <button class="navbar-toggler text-uppercase font-weight-bold bg-primary text-white rounded" type="button"
@@ -36,9 +36,9 @@
                 </ul>
             </div>
         </div>
-    </nav>
+    </nav> --}}
     <section>
-        <div class="container">@yield('content')</div>
+        @yield('content')
     </section>
 </body>
 <script src="https://code.jquery.com/jquery-1.12.4.js" crossorigin="anonymous"></script>

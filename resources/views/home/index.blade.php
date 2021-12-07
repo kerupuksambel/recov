@@ -7,7 +7,7 @@
 	integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
 	crossorigin=""/>
 	<style type="text/css">
-		#btnNav{
+		#navBtn{
 			position: absolute;
 			top: 10px;
 			right: 10px;
@@ -19,9 +19,20 @@
 			vertical-align: middle;
 			text-align: center;
 			display: inline;
+			background-color: rgba(50,50,50,0.8);
+			color: #fff
 		}
 
-		#btnNav:hover{
+		#navMenu{
+			position: absolute;
+			top: 10px;
+			right: 70px;
+			z-index: 9999;
+			padding: 10px;
+			background-color: rgba(255, 255, 255, 0.9);
+		}
+
+		#navBtn:hover{
 			cursor: pointer;
 		}
 	</style>
@@ -29,9 +40,40 @@
 
 @section('content')
 	<div class="container col-md-12 p-0">
-		{{-- <div id="btnNav" class="btn btn-secondary">
+		<div id="navBtn" class="btn">
 			<i class="fa fa-bars fa-fw"></i>
-		</div> --}}
+		</div>
+		<div id="navMenu">
+			<div class="form-group">
+				<label for="radius" class="font-weight-bold">Radius (km)</label>
+				<div class="" id="radiusVal"></div>
+			    <input type="range" id="filterRadius" class="form-control-range" min="1" max="15" value="5" step="0.1">
+			</div>
+			<div class="form-group">
+				<label for="radius" class="font-weight-bold">Tempat</label>
+				<div class="row">
+					<div class="col-md-6">
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" value="1" id="filterRestaurant" checked="checked">
+							<label class="form-check-label" for="filterRestaurant">
+							  Restoran
+							</label>
+						  </div>
+					</div>
+					<div class="col-md-6">
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" value="1" id="filterCafe" checked="checked">
+							<label class="form-check-label" for="filterCafe">
+							  Kafe
+							</label>
+						  </div>
+					</div>
+				</div>
+				
+			</div>
+
+			<button class="btn btn-primary" onclick="updateMap()">Filter</button>
+		</div>
 		<div id="map" style="width: 100%; height: 100%;"></div>
 		<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
 		aria-hidden="true">
@@ -61,12 +103,33 @@
 	<script src="js/osmtogeojson.js"></script>
 	<script>		
 		var userLat, userLon
+		var isNav = false;
+		var markers;
+		var map
 
 		$( document ).ready(function() {
 			if(navigator.geolocation){
 				navigator.geolocation.getCurrentPosition(fromUserLocation, fromDefaultLocation);
 			}
+
+			$("#radiusVal").text($("#filterRadius").val() + " km")
+
+			// $("#navMenu").hide();	
 		});
+
+		$("#navBtn").click(function(){
+			if(isNav){
+				$("#navMenu").hide();
+				isNav = false;
+			}else{
+				$("#navMenu").show();
+				isNav = true;
+			}
+		})
+
+		$("#filterRadius").change(function(){
+			$("#radiusVal").text($(this).val() + " km")
+		})
 
 		function showDetail(e){
 			console.log(e.layer.feature)
@@ -97,7 +160,7 @@
 			}
 			$("#modalTitle").text(title)
 			$("#modalBody").html(`
-				<form action="/place/submit/`+ e.layer.feature.id.split('/')[1] +`" method="POST">
+				<form action="/api/place/submit/`+ e.layer.feature.id.split('/')[1] +`" method="POST">
 					{{csrf_field()}}
 					<div class="form-group">
 						<label class="font-weight-bold">Komentar</label>
@@ -113,8 +176,8 @@
 		}
 
 		function fromUserLocation(location){
-			userLon = location.coords.longitude - 0.1;
-			userLat = location.coords.latitude - 0.05;
+			userLon = location.coords.longitude;
+			userLat = location.coords.latitude;
 
 			getData(userLon, userLat); 	
 		}
@@ -126,26 +189,27 @@
 			getData(userLon, userLat);
 		}
 
+		// urlBuilder() untuk generate link dengan radiusKm dan accepted
 		function urlBuilder(lon, lat, radiusKm, accepted){
 			radiusDeg = radiusKm * (1/111);
-			// radiusDeg = Math.round((radiusKm * (1/6378) + Number.EPSILON) * 10000) / 10000
-			userBox = lon + "," + lat + "," + (lon + radiusDeg) + "," + (lat + radiusDeg)
+			userBox = (lon - (radiusDeg / 2)) + "," + (lat - (radiusDeg / 2)) + "," + (lon + (radiusDeg / 2)) + "," + (lat + (radiusDeg / 2))
 			filters = ''
 			if(accepted.indexOf('cafe') != -1) filters += 'node[amenity=cafe];';
 			if(accepted.indexOf('restaurant') != -1) filters += 'node[amenity=restaurant];';
 			return 'https://overpass-api.de/api/interpreter?data=[out:xml][bbox][timeout:180];('+ filters +');out;&bbox=' + userBox;
 		}
 
+
+		// getData() untuk inisialisasi data
 		function getData(lon, lat){
-			var map = L.map('map').setView([lat + 0.06,lon + 0.06], 13);
+			map = L.map('map').setView([lat,lon], 13);
 			L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 				zoomControl: true,
 				attribution: 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a>'
 			}).addTo(map);
 			
-			var userBox = lon + "," + lat + "," + (lon + 0.2) + "," + (lat + 0.1)
 
-			var overpassApiUrl = urlBuilder(lon, lat, 50, ['cafe', 'restaurant']);
+			var overpassApiUrl = urlBuilder(lon, lat, 5, ['restaurant', 'cafe']);
 			console.log(overpassApiUrl)
 			
 			const iconCafe = L.icon({
@@ -161,7 +225,7 @@
 			$.get(overpassApiUrl, function (osmXml) {
 				var OSMGeojson = osmtogeojson(osmXml);
 				console.log(OSMGeojson) 
-				var resultLayer = L.geoJson(OSMGeojson, {
+				markers = L.geoJson(OSMGeojson, {
 					pointToLayer: function(feature, latlng){
 						var marker;
 						if(feature.properties.amenity == "cafe"){
@@ -172,7 +236,56 @@
 
 						return marker.bindTooltip(feature.properties.name ? feature.properties.name : feature.properties["name:en"])
 					}					
-				}).addTo(map).on('click', showDetail);
+				});
+
+				console.log(markers)
+
+				markers.addTo(map).on('click', showDetail);
+			});
+		}
+
+		function updateMap(){
+			markers.remove()
+			// markers = null
+			
+			var rad = $("#filterRadius").val()
+			var place = []
+			
+			if($("#filterRestaurant").attr('checked')) place.push("restaurant")
+			if($("#filterCafe").attr('checked')) place.push("cafe")
+
+			var overpassApiUrl = urlBuilder(userLon, userLat, rad, place);
+			console.log(overpassApiUrl)
+			
+			const iconCafe = L.icon({
+				iconUrl: "/img/icon/cafe.png",
+				iconSize: [32, 32],
+			});
+
+			const iconResto = L.icon({
+				iconUrl: "/img/icon/restaurant.png",
+				iconSize: [32, 32],
+			});
+			
+			$.get(overpassApiUrl, function (osmXml) {
+				var OSMGeojson = osmtogeojson(osmXml);
+				// console.log(OSMGeojson) 
+				markers = L.geoJson(OSMGeojson, {
+					pointToLayer: function(feature, latlng){
+						var marker;
+						if(feature.properties.amenity == "cafe"){
+							marker = L.marker(latlng, {icon: iconCafe})
+						}else{
+							marker = L.marker(latlng, {icon: iconResto})
+						}
+
+						return marker.bindTooltip(feature.properties.name ? feature.properties.name : feature.properties["name:en"])
+					}					
+				});
+
+				console.log(markers)
+				
+				markers.addTo(map).on('click', showDetail);
 			});
 		}
 	</script>

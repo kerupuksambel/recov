@@ -69,7 +69,11 @@
 						  </div>
 					</div>
 				</div>
-				
+			</div>
+
+			<div class="form-group">
+				<label for="nama" class="font-weight-bold">Nama</label>
+				<input type="text" class="form-control" id="filterName">
 			</div>
 
 			<button class="btn btn-primary" onclick="updateMap()">Filter</button>
@@ -210,7 +214,6 @@
 			
 
 			var overpassApiUrl = urlBuilder(lon, lat, 5, ['restaurant', 'cafe']);
-			console.log(overpassApiUrl)
 			
 			const iconCafe = L.icon({
 				iconUrl: "/img/icon/cafe.png",
@@ -224,7 +227,6 @@
 			
 			$.get(overpassApiUrl, function (osmXml) {
 				var OSMGeojson = osmtogeojson(osmXml);
-				console.log(OSMGeojson) 
 				markers = L.geoJson(OSMGeojson, {
 					pointToLayer: function(feature, latlng){
 						var marker;
@@ -237,8 +239,6 @@
 						return marker.bindTooltip(feature.properties.name ? feature.properties.name : feature.properties["name:en"])
 					}					
 				});
-
-				console.log(markers)
 
 				markers.addTo(map).on('click', showDetail);
 			});
@@ -255,8 +255,7 @@
 			if($("#filterCafe").attr('checked')) place.push("cafe")
 
 			var overpassApiUrl = urlBuilder(userLon, userLat, rad, place);
-			console.log(overpassApiUrl)
-			
+
 			const iconCafe = L.icon({
 				iconUrl: "/img/icon/cafe.png",
 				iconSize: [32, 32],
@@ -269,7 +268,31 @@
 			
 			$.get(overpassApiUrl, function (osmXml) {
 				var OSMGeojson = osmtogeojson(osmXml);
-				// console.log(OSMGeojson) 
+				var queryName = $("#filterName").val().toLowerCase()
+				if(queryName != ""){
+					console.log(OSMGeojson.features)
+					var newFeatures = OSMGeojson.features
+					console.log(newFeatures)
+					for (let i = 0; i < newFeatures.length; i++) {
+						if(newFeatures[i].properties.name){
+							var placeName = newFeatures[i].properties.name.toLowerCase();
+							if(!(placeName.includes(queryName))){
+								newFeatures.splice(i, 1)	
+								i--
+							}else{
+								console.log(placeName)
+								console.log(queryName)
+							}
+						}else{
+							// console.log('not found')
+							newFeatures.splice(i, 1)
+							i--
+						}
+					} 
+
+					OSMGeojson.features = newFeatures
+				}
+
 				markers = L.geoJson(OSMGeojson, {
 					pointToLayer: function(feature, latlng){
 						var marker;
@@ -282,8 +305,6 @@
 						return marker.bindTooltip(feature.properties.name ? feature.properties.name : feature.properties["name:en"])
 					}					
 				});
-
-				console.log(markers)
 				
 				markers.addTo(map).on('click', showDetail);
 			});

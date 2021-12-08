@@ -14,6 +14,6 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
+Route::get('place/all/{encoded_link}', [PlaceController::class, 'index']);
 Route::get('place/detail/{id_place}', [PlaceController::class, 'detail']);
 Route::post('place/submit/{id_place}', [PlaceController::class, 'submit']);

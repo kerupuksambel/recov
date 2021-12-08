@@ -7,6 +7,23 @@ use Illuminate\Support\Facades\DB;
 
 class PlaceController extends Controller
 {
+    public function index($encoded_link)
+    {
+        $link = base64_decode($encoded_link);
+        
+        $client = new \GuzzleHttp\Client();
+        $response = $client->get($link); 
+
+        $xml = ((string)$response->getBody());
+        $loaded = simplexml_load_string($xml);
+
+        $loaded->node[] = "xxx";
+
+        dd($loaded);
+
+        
+    }
+
     public function detail($id_place)
     {
         $reviews = DB::table('reviews')

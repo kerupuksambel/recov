@@ -23,6 +23,22 @@
 			color: #fff
 		}
 
+		#addBtn{
+			position: absolute;
+			top: 70px;
+			right: 10px;
+			width: 50px;
+			height: 50px;
+			z-index: 9999;
+			font-size: 20px;
+			padding: 15px 0;
+			vertical-align: middle;
+			text-align: center;
+			display: inline;
+			background-color: rgba(40,167,69, 0.8);
+			color: #fff
+		}
+
 		#navMenu{
 			position: absolute;
 			top: 10px;
@@ -43,6 +59,9 @@
 		<div id="navBtn" class="btn">
 			<i class="fa fa-bars fa-fw"></i>
 		</div>
+		{{-- <div id="addBtn" class="btn">
+			<i class="fa fa-plus fa-fw"></i>
+		</div> --}}
 		<div id="navMenu">
 			<div class="form-group">
 				<label for="radius" class="font-weight-bold">Radius (km)</label>
@@ -93,9 +112,6 @@
 						<div id="infoBody"></div>
 						<div id="modalBody" style="padding-top: 20px"></div>
 					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-					</div>
 				</div>
 			</div>
 		</div>
@@ -118,7 +134,7 @@
 
 			$("#radiusVal").text($("#filterRadius").val() + " km")
 
-			// $("#navMenu").hide();	
+			$("#navMenu").hide();	
 		});
 
 		$("#navBtn").click(function(){
@@ -144,10 +160,10 @@
 					for (let index = 0; index < res.komentar.length; index++) {
 						komentar += '<li>' + res.komentar[index] + '</li>';
 					}
-					$("#infoBody").html('<ul><li>Amenity : <b>'+e.layer.feature.properties.amenity +'</b></li><li>Rating : <b>'+res.rating+`</b></li></ul>
+					$("#infoBody").html('<div><b>Rating</b><br/> '+res.rating+` / 5</div>
 					<b>Komentar Terbaru</b>` + komentar)
 				}else{
-					$("#infoBody").html(`<ul><li>Amenity : <b>`+e.layer.feature.properties.amenity +`</b></li></ul>`)
+					$("#infoBody").html(`<div class='text-center'>Belum ada informasi untuk restoran ini.</div>`)
 				}
 			});
 			var title;
@@ -162,7 +178,14 @@
 					title = "Restoran"
 				}
 			}
-			$("#modalTitle").text(title)
+
+			if(e.layer.feature.properties.amenity == "cafe"){
+				title += " <div class='badge badge-primary'>Cafe</div>"
+			}else{
+				title += " <div class='badge badge-danger'>Restoran</div>"
+			}
+
+			$("#modalTitle").html(title)
 			$("#modalBody").html(`
 				<form action="/api/place/submit/`+ e.layer.feature.id.split('/')[1] +`" method="POST">
 					{{csrf_field()}}
@@ -174,6 +197,7 @@
 						<label class="font-weight-bold">Rating (1-5)</label>
 						<input type="number" min="1" max="5" class="form-control" name="rating">
 					</div>
+					<input type="submit" class="btn btn-primary" value="Tambah">
 				</form>
 				`)
 			$('#detailModal').modal({show: true})
@@ -241,6 +265,7 @@
 				});
 
 				markers.addTo(map).on('click', showDetail);
+				console.log(OSMGeojson)
 			});
 		}
 
@@ -309,5 +334,9 @@
 				markers.addTo(map).on('click', showDetail);
 			});
 		}
+
+		$("#addBtn").click(function(){
+
+		});
 	</script>
 @endsection

@@ -276,8 +276,8 @@
 			var rad = $("#filterRadius").val()
 			var place = []
 			
-			if($("#filterRestaurant").attr('checked')) place.push("restaurant")
-			if($("#filterCafe").attr('checked')) place.push("cafe")
+			if($("#filterRestaurant").is(':checked')) place.push("restaurant")
+			if($("#filterCafe").is(':checked')) place.push("cafe")
 
 			var overpassApiUrl = urlBuilder(userLon, userLat, rad, place);
 

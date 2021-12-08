@@ -43,7 +43,7 @@ class PlaceController extends Controller
             
             return response()->json([
                 'isFound' => TRUE,
-                'rating' => $rating,
+                'rating' => round($rating, 2),
                 'komentar' => $comments
             ]);
         }

@@ -59,9 +59,9 @@
 		<div id="navBtn" class="btn">
 			<i class="fa fa-bars fa-fw"></i>
 		</div>
-		{{-- <div id="addBtn" class="btn">
+		<div id="addBtn" class="btn">
 			<i class="fa fa-plus fa-fw"></i>
-		</div> --}}
+		</div>
 		<div id="navMenu">
 			<div class="form-group">
 				<label for="radius" class="font-weight-bold">Radius (km)</label>
@@ -93,6 +93,12 @@
 			<div class="form-group">
 				<label for="nama" class="font-weight-bold">Nama</label>
 				<input type="text" class="form-control" id="filterName">
+			</div>
+
+            <div class="form-group">
+				<label for="nama" class="font-weight-bold">Rating</label>
+                <div id="ratingVal"></div>
+				<input type="number" class="form-control-range" id="filterRating" max="5" min="1" step="0.01">
 			</div>
 
 			<button class="btn btn-primary" onclick="updateMap()">Filter</button>
@@ -217,17 +223,6 @@
 			getData(userLon, userLat);
 		}
 
-		// urlBuilder() untuk generate link dengan radiusKm dan accepted
-		function urlBuilder(lon, lat, radiusKm, accepted){
-			radiusDeg = radiusKm * (1/111);
-			userBox = (lon - (radiusDeg / 2)) + "," + (lat - (radiusDeg / 2)) + "," + (lon + (radiusDeg / 2)) + "," + (lat + (radiusDeg / 2))
-			filters = ''
-			if(accepted.indexOf('cafe') != -1) filters += 'node[amenity=cafe];';
-			if(accepted.indexOf('restaurant') != -1) filters += 'node[amenity=restaurant];';
-			return 'https://overpass-api.de/api/interpreter?data=[out:json][bbox][timeout:180];('+ filters +');out;&bbox=' + userBox;
-		}
-
-
 		// getData() untuk inisialisasi data
 		function getData(lon, lat){
 			map = L.map('map').setView([lat,lon], 13);
@@ -236,9 +231,7 @@
 				attribution: 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a>'
 			}).addTo(map);
 
-
-			var overpassApiUrl = urlBuilder(lon, lat, 5, ['restaurant', 'cafe']);
-            overpassApiUrl = '/api/place/all';
+            var overpassApiUrl = '/api/place/all';
 
 			const iconCafe = L.icon({
 				iconUrl: "/img/icon/cafe.png",
@@ -277,7 +270,6 @@
 
 		function updateMap(){
 			markers.remove()
-			// markers = null
 
 			var rad = $("#filterRadius").val()
 			var place = []
@@ -285,7 +277,7 @@
 			if($("#filterRestaurant").is(':checked')) place.push("restaurant")
 			if($("#filterCafe").is(':checked')) place.push("cafe")
 
-			var overpassApiUrl = urlBuilder(userLon, userLat, rad, place);
+            var overpassApiUrl = '/api/place/all'
 
 			const iconCafe = L.icon({
 				iconUrl: "/img/icon/cafe.png",
@@ -297,7 +289,12 @@
 				iconSize: [32, 32],
 			});
 
-			$.get(overpassApiUrl, function (osmXml) {
+			$.get(overpassApiUrl, {
+                "lat": userLat,
+                "lon": userLon,
+                "radius": rad,
+                "amenity": place
+            }, function (osmXml) {
 				var OSMGeojson = osmtogeojson(osmXml);
 				var queryName = $("#filterName").val().toLowerCase()
 				if(queryName != ""){
@@ -323,6 +320,28 @@
 
 					OSMGeojson.features = newFeatures
 				}
+
+                var queryRating = parseFloat($("#filterRating").val())
+                console.log(queryRating)
+                if(!isNaN(queryRating)){
+					var newFeatures = OSMGeojson.features
+					for (let i = 0; i < newFeatures.length; i++) {
+						if(newFeatures[i].properties.rating){
+							var placeRating = newFeatures[i].properties.rating;
+							if(!(placeRating >= queryRating)){
+								newFeatures.splice(i, 1)
+								i--
+							}
+						}else{
+							newFeatures.splice(i, 1)
+							i--
+						}
+					}
+
+					OSMGeojson.features = newFeatures
+				}
+
+                console.log(OSMGeojson)
 
 				markers = L.geoJson(OSMGeojson, {
 					pointToLayer: function(feature, latlng){

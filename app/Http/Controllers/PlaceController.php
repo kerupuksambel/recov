@@ -65,20 +65,21 @@ class PlaceController extends Controller
         }
         // Get all the ratings
         $ids = array_column($json['elements'], 'id');
-        $ratings = Review::selectRaw('COUNT(*) AS count, SUM(rating) AS sum, id_place AS id')
+        $ratings = Review::selectRaw('COUNT(*) AS count, SUM(rating) AS sum, id_place')
         ->whereIn('id_place', $ids)
         ->groupBy('id_place')
         ->get()
         ->toArray();
 
-        $ids = array_column($ratings, 'id');
+        $ids = array_column($ratings, 'id_place');
 
         foreach ($json['elements'] as $key => $value) {
             $id = $json['elements'][$key]['id'];
             // array_search
-            if($pos = array_search($id, $ids) != FALSE){
+            $pos = array_search($id, $ids);
+            if($pos !== FALSE){
                 if($ratings[$pos]['count'] > 0){
-                    $json['elements'][$key]['tags']['rating'] = $ratings[$pos]['sum'] / $ratings[$pos]['count'];
+                    $json['elements'][$key]['tags']['rating'] = (int)$ratings[$pos]['sum'] / (int)$ratings[$pos]['count'];
                 }
             }else{
                 $json['elements'][$key]['tags']['rating'] = NULL;

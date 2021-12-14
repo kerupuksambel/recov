@@ -120,7 +120,7 @@ class PlaceController extends Controller
         $validator = Validator::make($request->all(), [
             'nama' => 'required',
             'lat' => 'required|numeric',
-            'long' => 'required|numeric',
+            'lon' => 'required|numeric',
             'amenity' => 'required|in:restaurant,cafe'
         ]);
 
@@ -132,7 +132,7 @@ class PlaceController extends Controller
             'id' => Uuid::uuid4(),
             'nama' => $request->nama,
             'lat' => $request->lat,
-            'long' => $request->long,
+            'long' => $request->lon,
             'amenity' => $request->amenity
         ]);
 

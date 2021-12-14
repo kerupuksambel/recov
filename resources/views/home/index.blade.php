@@ -32,12 +32,20 @@
 			z-index: 9999;
 			font-size: 20px;
 			padding: 15px 0;
-			vertical-align: middle;
-			text-align: center;
-			display: inline;
-			background-color: rgba(40,167,69, 0.8);
-			color: #fff
+            vertical-align: middle;
+            text-align: center;
+            display: inline;
+            background-color: rgba(40,167,69, 0.8);
+            color: #fff
 		}
+
+        .btnAdd{
+        }
+
+        .btnStop{
+            background-color: rgba(217, 83, 79, 0.8) !important;
+            color: #fff
+        }
 
 		#navMenu{
 			position: absolute;
@@ -104,12 +112,14 @@
 			<button class="btn btn-primary" onclick="updateMap()">Filter</button>
 		</div>
 		<div id="map" style="width: 100%; height: 100%;"></div>
-		<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+
+        {{-- Modal Detail --}}
+        <div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
 		aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title" id="modalTitle">Modal title</h5>
+						<h5 class="modal-title" id="detailTitle">Modal title</h5>
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 							<span aria-hidden="true">&times;</span>
 						</button>
@@ -117,6 +127,50 @@
 					<div class="modal-body">
 						<div id="infoBody"></div>
 						<div id="modalBody" style="padding-top: 20px"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+        {{-- Modal Add --}}
+        <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+		aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Add Place</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+                        <form action="/api/place/add/" method="POST">
+                            {{ csrf_field() }}
+                            <div class="row">
+                                <div class="col-md-6 form-group">
+                                    <label for="placeLat">Latitude</label>
+                                    <input type="text" name="lat" readonly class="form-control" id="placeLat">
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label for="placeLong">Longtitude</label>
+                                    <input type="text" name="lon" readonly class="form-control" id="placeLong">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-9 form-group">
+                                    <label for="placeNama">Nama</label>
+                                    <input type="text" name="nama" class="form-control" id="placeNama">
+                                </div>
+                                <div class="col-md-3 form-group">
+                                    <label for="placeType">Tipe</label>
+                                    <select name="amenity" class="form-control" id="placeType">
+                                        <option value="cafe">Cafe</option>
+                                        <option value="restaurant">Restoran</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="submit" value="Tambahkan" class="btn btn-primary">
+                        </form>
 					</div>
 				</div>
 			</div>
@@ -130,6 +184,7 @@
 	<script>
 		var userLat, userLon
 		var isNav = false;
+        var isAdd = true;
 		var markers;
 		var map
 
@@ -191,7 +246,7 @@
 				title += " <div class='badge badge-danger'>Restoran</div>"
 			}
 
-			$("#modalTitle").html(title)
+			$("#detailTitle").html(title)
 			$("#modalBody").html(`
 				<form action="/api/review/submit/`+ e.layer.feature.id.split('/')[1] +`" method="POST">
 					{{csrf_field()}}
@@ -360,8 +415,24 @@
 			});
 		}
 
-		$("#addBtn").click(function(){
+        function showAdd(ev){
+            var latlng = map.mouseEventToLatLng(ev.originalEvent);
+            $('#addModal').modal({show: true});
+            $("#placeLat").val(latlng.lat);
+            $("#placeLong").val(latlng.lng);
+        }
 
+		$("#addBtn").click(function(){
+            console.log(isAdd)
+            if(isAdd){
+                map.on('click', showAdd)
+                $("#addBtn").html('<i class="fa fa-times fa-fw"></i>').toggleClass("btnStop")
+                isAdd = false
+            }else{
+                map.off('click', showAdd)
+                $("#addBtn").html('<i class="fa fa-plus fa-fw"></i>').toggleClass("btnStop")
+                isAdd = true
+            }
 		});
 	</script>
 @endsection

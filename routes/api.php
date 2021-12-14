@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PlaceController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::get('place/all/{encoded_link}', [PlaceController::class, 'index']);
+Route::get('place/all/', [PlaceController::class, 'index']);
 Route::get('place/detail/{id_place}', [PlaceController::class, 'detail']);
-Route::post('place/submit/{id_place}', [PlaceController::class, 'submit']);
+Route::post('place/add/', [PlaceController::class, 'add']);
+
+Route::post('review/submit/{id_place}', [ReviewController::class, 'add']);

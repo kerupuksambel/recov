@@ -121,7 +121,7 @@
 @section('js')
 	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" crossorigin=""></script>
 	<script src="js/osmtogeojson.js"></script>
-	<script>		
+	<script>
 		var userLat, userLon
 		var isNav = false;
 		var markers;
@@ -134,7 +134,7 @@
 
 			$("#radiusVal").text($("#filterRadius").val() + " km")
 
-			$("#navMenu").hide();	
+			$("#navMenu").hide();
 		});
 
 		$("#navBtn").click(function(){
@@ -187,7 +187,7 @@
 
 			$("#modalTitle").html(title)
 			$("#modalBody").html(`
-				<form action="/api/place/submit/`+ e.layer.feature.id.split('/')[1] +`" method="POST">
+				<form action="/api/review/submit/`+ e.layer.feature.id.split('/')[1] +`" method="POST">
 					{{csrf_field()}}
 					<div class="form-group">
 						<label class="font-weight-bold">Komentar</label>
@@ -207,7 +207,7 @@
 			userLon = location.coords.longitude;
 			userLat = location.coords.latitude;
 
-			getData(userLon, userLat); 	
+			getData(userLon, userLat);
 		}
 
 		function fromDefaultLocation(location){
@@ -224,7 +224,7 @@
 			filters = ''
 			if(accepted.indexOf('cafe') != -1) filters += 'node[amenity=cafe];';
 			if(accepted.indexOf('restaurant') != -1) filters += 'node[amenity=restaurant];';
-			return 'https://overpass-api.de/api/interpreter?data=[out:xml][bbox][timeout:180];('+ filters +');out;&bbox=' + userBox;
+			return 'https://overpass-api.de/api/interpreter?data=[out:json][bbox][timeout:180];('+ filters +');out;&bbox=' + userBox;
 		}
 
 
@@ -235,10 +235,11 @@
 				zoomControl: true,
 				attribution: 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a>'
 			}).addTo(map);
-			
+
 
 			var overpassApiUrl = urlBuilder(lon, lat, 5, ['restaurant', 'cafe']);
-			
+            overpassApiUrl = '/api/place/all';
+
 			const iconCafe = L.icon({
 				iconUrl: "/img/icon/cafe.png",
 				iconSize: [32, 32],
@@ -248,8 +249,14 @@
 				iconUrl: "/img/icon/restaurant.png",
 				iconSize: [32, 32],
 			});
-			
-			$.get(overpassApiUrl, function (osmXml) {
+
+			$.get(overpassApiUrl, {
+                "lat": lat,
+                "lon": lon,
+                "radius": 5,
+                "amenity": ["restaurant", "cafe"]
+            }, function (osmXml) {
+				console.log(osmXml)
 				var OSMGeojson = osmtogeojson(osmXml);
 				markers = L.geoJson(OSMGeojson, {
 					pointToLayer: function(feature, latlng){
@@ -261,21 +268,20 @@
 						}
 
 						return marker.bindTooltip(feature.properties.name ? feature.properties.name : feature.properties["name:en"])
-					}					
+					}
 				});
 
 				markers.addTo(map).on('click', showDetail);
-				console.log(OSMGeojson)
 			});
 		}
 
 		function updateMap(){
 			markers.remove()
 			// markers = null
-			
+
 			var rad = $("#filterRadius").val()
 			var place = []
-			
+
 			if($("#filterRestaurant").is(':checked')) place.push("restaurant")
 			if($("#filterCafe").is(':checked')) place.push("cafe")
 
@@ -290,7 +296,7 @@
 				iconUrl: "/img/icon/restaurant.png",
 				iconSize: [32, 32],
 			});
-			
+
 			$.get(overpassApiUrl, function (osmXml) {
 				var OSMGeojson = osmtogeojson(osmXml);
 				var queryName = $("#filterName").val().toLowerCase()
@@ -302,7 +308,7 @@
 						if(newFeatures[i].properties.name){
 							var placeName = newFeatures[i].properties.name.toLowerCase();
 							if(!(placeName.includes(queryName))){
-								newFeatures.splice(i, 1)	
+								newFeatures.splice(i, 1)
 								i--
 							}else{
 								console.log(placeName)
@@ -313,7 +319,7 @@
 							newFeatures.splice(i, 1)
 							i--
 						}
-					} 
+					}
 
 					OSMGeojson.features = newFeatures
 				}
@@ -328,9 +334,9 @@
 						}
 
 						return marker.bindTooltip(feature.properties.name ? feature.properties.name : feature.properties["name:en"])
-					}					
+					}
 				});
-				
+
 				markers.addTo(map).on('click', showDetail);
 			});
 		}

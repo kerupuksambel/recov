@@ -14,7 +14,11 @@ class CreateTablePlaces extends Migration
     public function up()
     {
         Schema::create('places', function (Blueprint $table) {
-            $table->id();
+            $table->string('id', 36)->primary();
+            $table->string('nama');
+            $table->double('lat');
+            $table->double('long');
+            $table->enum('amenity', ['restaurant', 'cafe']);
             $table->timestamps();
         });
     }
@@ -26,6 +30,6 @@ class CreateTablePlaces extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('table_places');
+        Schema::dropIfExists('places');
     }
 }
